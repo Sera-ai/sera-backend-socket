@@ -35,13 +35,9 @@ io.on('connection', (socket) => {
     socket.on("edgeUpdate", (edge) => edgeEvents.update_edge(edge, builder, socket))
     socket.on("onConnect", (edge) => edgeEvents.connect_edge(edge, builder, socket))
 
-    socket.on("getId", () => {
-        socket.emit('gotId', socket.id);
-    })
+    socket.on("getId", () => { socket.emit('gotId', socket.id); })
 
-    socket.on("updateField", (params) => {
-        socket.broadcast.to(builder).emit('updateField', params);
-    })
+    socket.on("updateField", (params) => { socket.broadcast.to(builder).emit('updateField', params); })
 
     socket.on("mouseMove", (params) => {
         const data = { id: socket.id, x: params.x, y: params.y, color: params.color }
@@ -54,6 +50,6 @@ io.on('connection', (socket) => {
 });
 
 app.use(cors(), express.json(), bodyParser.urlencoded({ extended: true }), bodyParser.json());
-server.listen(10080, () => {
-    console.log(`Socket server Started at ${10080}`)
+server.listen(process.env.PORT, () => {
+    console.log(`Socket server Started at ${process.env.PORT}`)
 })
