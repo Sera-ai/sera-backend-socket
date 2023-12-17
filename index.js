@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
 
     socket.on("getId", () => { socket.emit('gotId', socket.id); })
 
-    socket.on("updateField", (params) => { socket.broadcast.to(builder).emit('updateField', params); })
+    socket.on("updateField", (param) => nodeEvents.update_node_data(param, builder, socket))
 
     socket.on("mouseMove", (params) => {
         const data = { id: socket.id, x: params.x, y: params.y, color: params.color }

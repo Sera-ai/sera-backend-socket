@@ -1,4 +1,3 @@
-const nodesBuilder = require('../models/models.nodes');
 const modelsBuilder = require('../models/models.builder');
 
 function update_edge(params, builder, socket) {

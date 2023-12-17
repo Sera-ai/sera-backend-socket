@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+
+
 const dataSchema = new mongoose.Schema({
     nodes: {
         required: true,
@@ -9,6 +11,6 @@ const dataSchema = new mongoose.Schema({
         required: true,
         type: Array
     }
-}, { collection: "builder_inventory" })
+}, { collection: "builder_inventory", strict: false })
 
 module.exports = mongoose.model('builder_inventory', dataSchema)
