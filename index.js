@@ -1,8 +1,7 @@
-require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
-const mongoString = process.env.DATABASE_URL;
+const mongoString = process.env.DB_HOST;
 const bodyParser = require('body-parser');
 
 mongoose.connect(mongoString, { dbName: "Sera" });
@@ -50,6 +49,6 @@ io.on('connection', (socket) => {
 });
 
 app.use(cors(), express.json(), bodyParser.urlencoded({ extended: true }), bodyParser.json());
-server.listen(process.env.PORT, () => {
-    console.log(`Socket server Started at ${process.env.PORT}`)
+server.listen(process.env.BE_SOCKET_PORT, () => {
+    console.log(`Socket server Started at ${process.env.BE_SOCKET_PORT}`)
 })
