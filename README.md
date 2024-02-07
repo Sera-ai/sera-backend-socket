@@ -1,2 +1,2 @@
 # be_Socket
-socket.io server for live interaction
+socket.io server for live interaction.
