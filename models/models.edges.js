@@ -5,27 +5,19 @@ const dataSchema = new mongoose.Schema({
         required: false,
         type: String
     },
-    width: {
-        required: false,
-        type: Number
-    },
-    height: {
-        required: false,
-        type: Number
-    },
-    data: {
-        required: false,
-        type: Object
-    },
-    type: {
+    source: {
         required: false,
         type: String
     },
-    className: {
+    target: {
         required: false,
         type: String
     },
-    position: {
+    animated: {
+        required: false,
+        type: Boolean
+    },
+    style: {
         required: false,
         type: Object
     },
@@ -33,18 +25,18 @@ const dataSchema = new mongoose.Schema({
         required: false,
         type: Boolean
     },
-    positionAbsolute: {
-        required: false,
-        type: Object
-    },
-    dragging: {
-        required: false,
-        type: Boolean
-    },
-    node_id: {
+    sourceHandle: {
         required: false,
         type: String
     },
-}, { collection: "builder_nodes", minimize: false })
+    targetHandle: {
+        required: false,
+        type: String
+    },
+    type: {
+        required: false,
+        type: String
+    },
+}, { collection: "builder_edges" })
 
-module.exports = mongoose.model('builder_nodes', dataSchema)
+module.exports = mongoose.model('builder_edges', dataSchema)
