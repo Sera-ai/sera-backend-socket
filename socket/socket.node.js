@@ -12,7 +12,7 @@ function delete_node(nodes, builder, socket) {
       .then((e) => {
         console.log(e);
       });
-    nodesBuilder.findByIdAndDelete(node.node_id);
+    nodesBuilder.findByIdAndDelete(node.id);
   });
   socket.broadcast.to(builder).emit("nodeDelete", nodes);
 }
