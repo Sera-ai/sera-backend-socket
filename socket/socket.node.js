@@ -2,18 +2,8 @@ const modelsNode = require("../models/models.nodes");
 const modelsBuilder = require("../models/models.builder");
 const mongoose = require("mongoose");
 
-async function create_node(newNode, builder, socket) {
-  const nodedata = new modelsNode(newNode);
-  const savedData = await nodedata.save();
-
-  modelsBuilder
-    .findByIdAndUpdate(builder, {
-      $push: { nodes: new mongoose.Types.ObjectId(savedData._id) },
-    })
-    .then((e) => {
-      console.log("sending back to server ", builder);
-      socket.broadcast.to(builder).emit("nodeCreate", { newNode: savedData });
-    });
+async function create_node(data, socket) {
+  socket.broadcast.to(data.builder).emit("nodeCreate", { newNode: data.node });
 }
 
 function delete_node(nodes, builder, socket) {
