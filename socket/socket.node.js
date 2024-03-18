@@ -1,27 +1,15 @@
 const modelsNode = require("../models/models.nodes");
-const modelsBuilder = require("../models/models.builder");
-const mongoose = require("mongoose");
 
-async function create_node(data, socket) {
-  socket.broadcast.to(data.builder).emit("nodeCreate", { newNode: data.node });
+function create_node(data, socket) {
+  socket.broadcast.to(data.builder).emit("nodeCreate", data.node);
 }
 
-function delete_node(nodes, builder, socket) {
-  nodes.map((node) => {
-    modelsBuilder
-      .findByIdAndUpdate(builder, {
-        $pull: { nodes: new mongoose.Types.ObjectId(node._id) },
-      })
-      .then((e) => {
-        console.log(e);
-      });
-    modelsNode.findByIdAndDelete(new mongoose.Types.ObjectId(node._id));
-  });
-  socket.broadcast.to(builder).emit("nodeDelete", nodes);
+function delete_node(data, socket) {
+  socket.broadcast.to(data.builder).emit("nodeDelete", data.node);
 }
 
 function update_node(node, builder, socket) {
-  node.changedNodes.map((nod) => {
+  node.map((nod) => {
     console.log(nod);
     modelsNode
       .findOneAndUpdate(
@@ -30,9 +18,7 @@ function update_node(node, builder, socket) {
       )
       .then((r) => console.log(r));
   });
-  socket.broadcast
-    .to(builder)
-    .emit("nodeUpdate", { changedNodes: node.changedNodes });
+  socket.broadcast.to(builder).emit("nodeUpdate", node);
 }
 
 function update_node_data(params, builder, socket) {

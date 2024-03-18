@@ -39,9 +39,22 @@ database.once("connected", () => {
       socket.join("management");
     });
 
+    //new
+
     socket.on("nodeCreated", (data) => {
       nodeEvents.create_node(data, socket);
     });
+
+    socket.on("nodeDeleted", (data) => nodeEvents.delete_node(data, socket));
+
+    socket.on("edgeCreated", (data) => {
+      edgeEvents.create_edge(data, socket);
+    });
+
+    socket.on("edgeDeleted", (data) => edgeEvents.delete_edge(data, socket));
+    socket.on("edgeUpdated", (data) => edgeEvents.update_edge(data, socket));
+
+    //old, need to update
 
     socket.on("nodeUpdate", (node) =>
       nodeEvents.update_node(node, builder, socket)
@@ -49,10 +62,6 @@ database.once("connected", () => {
 
     socket.on("nodeDelete", (node) =>
       nodeEvents.delete_node(node, builder, socket)
-    );
-
-    socket.on("edgeUpdate", (edge) =>
-      edgeEvents.update_edge(edge, builder, socket)
     );
 
     socket.on("onConnect", (edge) =>
