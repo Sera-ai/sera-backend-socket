@@ -28,7 +28,9 @@ database.once("connected", () => {
   io.on("connection", (socket) => {
     console.log("connect");
     let builder = null;
-    socket.send("connect", socket.id);
+    setTimeout(() => {
+      socket.emit("connectSuccessful", socket.id);
+    }, 3000);
     socket.on("builderConnect", (builderId) => {
       builder = builderId;
       socket.join(builderId);
