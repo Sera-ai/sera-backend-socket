@@ -26,7 +26,6 @@ database.once("connected", () => {
   const io = new Server(server, { cors: { origin: "*" } });
 
   io.on("connection", (socket) => {
-    console.log("connect");
     let builder = null;
     setTimeout(() => {
       socket.emit("connectSuccessful", socket.id);

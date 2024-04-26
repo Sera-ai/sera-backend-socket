@@ -1,5 +1,6 @@
 const modelsBuilder = require("../models/models.builder");
 const modelsNodes = require("../models/models.nodes");
+const modelsStruc = require("../models/models.eventStruc");
 const modelsEdges = require("../models/models.edges");
 const ObjectId = require("mongoose").Types.ObjectId;
 

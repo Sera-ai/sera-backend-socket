@@ -1,3 +1,5 @@
+const { default: mongoose } = require("mongoose");
+const modelsEventStruc = require("../models/models.eventStruc");
 const modelsNode = require("../models/models.nodes");
 
 function create_node(data, socket) {
@@ -23,13 +25,30 @@ function update_node(node, builder, socket) {
 
 function update_node_data(params, builder, socket) {
   console.log("params", params);
-  modelsNode
-    .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
-    .then((e) => {
-      console.log("e", e);
-    });
+  if (params.node.type != "sendEventNode") {
+    modelsNode
+      .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
+      .then((e) => {
+        console.log("e", e);
+      });
 
-  socket.broadcast.to(builder).emit("updateField", params);
+    socket.broadcast.to(builder).emit("updateField", params);
+  } else {
+    console.log(params);
+    modelsNode
+      .findOneAndUpdate(
+        { id: params.node.id },
+        { "data.inputData": params.value }
+      )
+      .then((e) => {
+        console.log("e", e);
+      });
+    modelsEventStruc
+      .findByIdAndUpdate(params.node.data.struc_id, { type: params.value })
+      .then((e) => {
+        console.log("e", e);
+      });
+  }
 }
 
 module.exports = {
