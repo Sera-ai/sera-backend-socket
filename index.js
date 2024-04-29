@@ -3,12 +3,16 @@ const express = require("express");
 const mongoose = require("mongoose");
 const mongoString = process.env.DB_HOST;
 const bodyParser = require("body-parser");
+const SeraEvents = require("./models/models.seraEvents");
+const SeraSettings = require("./models/models.sera_settings");
 
 mongoose.connect(`${mongoString}/Sera`, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 const database = mongoose.connection;
+
+let toastables = [];
 
 database.on("error", (error) => {
   console.log(error);
@@ -17,6 +21,20 @@ database.on("error", (error) => {
 database.once("connected", () => {
   console.log("Database Connected");
   const app = express();
+
+  SeraSettings.findOne({ user: "admin" }).then((doc) => {
+    toastables = doc.toastables;
+  });
+
+  const settingsStream = SeraSettings.watch();
+
+  settingsStream.on("change", (change) => {
+    console.log(change);
+    toastables = change.updateDescription.updatedFields.toastables;
+    console.log(toastables);
+  });
+
+  const eventStream = SeraEvents.watch();
 
   const http = require("http");
   const server = http.createServer(app);
@@ -38,6 +56,15 @@ database.once("connected", () => {
     socket.on("backendConnect", () => {
       console.log("builder connected");
       socket.join("management");
+    });
+
+    eventStream.on("change", (change) => {
+      console.log(change);
+      if (change.operationType == "insert") {
+        const doc = change.fullDocument;
+        if (toastables.includes(doc.type))
+          socket.emit("eventNotification", doc);
+      }
     });
 
     //new

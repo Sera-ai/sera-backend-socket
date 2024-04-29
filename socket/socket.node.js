@@ -25,7 +25,7 @@ function update_node(node, builder, socket) {
 
 function update_node_data(params, builder, socket) {
   console.log("params", params);
-  if (params.node.type != "sendEventNode") {
+  if (params?.node?.type != "sendEventNode") {
     modelsNode
       .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
       .then((e) => {
