@@ -45,9 +45,8 @@ database.once("connected", () => {
 
   io.on("connection", (socket) => {
     let builder = null;
-    setTimeout(() => {
-      socket.emit("connectSuccessful", socket.id);
-    }, 3000);
+    console.log("SENDING");
+    socket.emit("connectSuccessful", socket.id);
     socket.on("builderConnect", (builderId) => {
       builder = builderId;
       socket.join(builderId);
@@ -56,6 +55,7 @@ database.once("connected", () => {
     socket.on("backendConnect", () => {
       console.log("builder connected");
       socket.join("management");
+      socket.emit("connectSuccessful", socket.id);
     });
 
     eventStream.on("change", (change) => {
