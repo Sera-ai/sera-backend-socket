@@ -23,7 +23,7 @@ database.once("connected", () => {
   const app = express();
 
   SeraSettings.findOne({ user: "admin" }).then((doc) => {
-    toastables = doc.toastables;
+    toastables = doc?.toastables || [];
   });
 
   const settingsStream = SeraSettings.watch();
@@ -41,7 +41,10 @@ database.once("connected", () => {
   const { Server } = require("socket.io");
   const nodeEvents = require("./socket/socket.node");
   const edgeEvents = require("./socket/socket.edge");
-  const io = new Server(server, { cors: { origin: "*" } });
+  const io = new Server(server, {
+    cors: { origin: "*" },
+    path: "/sera-socket-io"
+  });
 
   io.on("connection", (socket) => {
     let builder = null;
