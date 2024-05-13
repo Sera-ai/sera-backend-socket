@@ -12,36 +12,6 @@ async function calculateHash(value) {
     return crypto.createHash('md5').update(value).digest('hex');
 }
 
-async function updateParentNodeHash(parentNodeId) {
-    const parentNode = await modelsBuilder.findOne({ _id: parentNodeId });
-
-    if (parentNode) {
-        let hashValue = await calculateHash(parentNode.name);
-
-        if (parentNode.nodes && parentNode.nodes.length > 0) {
-            for (let nodeId of parentNode.nodes) {
-                const node = await modelsNodes.findOne({ _id: nodeId });
-                if (node) {
-                    const nodeHash = await calculateHash(node.name);
-                    hashValue = await calculateHash(hashValue + nodeHash);
-                }
-            }
-        }
-
-        if (parentNode.edges && parentNode.edges.length > 0) {
-            for (let edgeId of parentNode.edges) {
-                const edge = await modelsEdges.findOne({ _id: edgeId });
-                if (edge) {
-                    const edgeHash = await calculateHash(edge.name);
-                    hashValue = await calculateHash(hashValue + edgeHash);
-                }
-            }
-        }
-
-        await modelsBuilder.updateOne({ _id: parentNodeId }, { $set: { hashValue: hashValue } });
-    }
-}
-
 const connectDatabase = async (mongoString) => {
     try {
         await mongoose.connect(`${mongoString}/Sera`, {
@@ -64,36 +34,6 @@ const connectDatabase = async (mongoString) => {
             console.log("Settings Change:", change);
             toastables = change.updateDescription.updatedFields.toastables;
             console.log(toastables);
-        });
-
-        inventoryChangeStream.on('change', async (change) => {
-            console.log("Inventory Change:", change);
-            if (change.operationType === 'insert' || change.operationType === 'update') {
-                const documentId = change.documentKey._id;
-                await updateParentNodeHash(documentId);
-            }
-        });
-
-        nodesChangeStream.on('change', async (change) => {
-            console.log("Nodes Change:", change);
-            if (change.operationType === 'update' || change.operationType === 'insert') {
-                const documentId = change.documentKey._id;
-                const parentNodes = await modelsBuilder.find({ nodes: documentId }).toArray();
-                for (let parentNode of parentNodes) {
-                    await updateParentNodeHash(parentNode._id);
-                }
-            }
-        });
-
-        edgesChangeStream.on('change', async (change) => {
-            console.log("Edges Change:", change);
-            if (change.operationType === 'update' || change.operationType === 'insert') {
-                const documentId = change.documentKey._id;
-                const parentNodes = await modelsBuilder.find({ edges: documentId }).toArray();
-                for (let parentNode of parentNodes) {
-                    await updateParentNodeHash(parentNode._id);
-                }
-            }
         });
 
         // Add error handling for streams
