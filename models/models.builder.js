@@ -14,6 +14,10 @@ const dataSchema = new mongoose.Schema(
       required: false,
       type: Boolean,
     },
+    hashValue: {
+      required: false,
+      type: String,
+    },
   },
   { collection: "builder_inventory", strict: false }
 );
