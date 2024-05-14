@@ -4,7 +4,6 @@ const edgeEvents = require("../socket/socket.edge");
 const setupSocketHandlers = (io, eventStream, toastables) => {
   io.on("connection", (socket) => {
     let builder = null;
-    console.log("SENDING");
     socket.emit("connectSuccessful", socket.id);
 
     socket.on("builderConnect", (builderId) => {

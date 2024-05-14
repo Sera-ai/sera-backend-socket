@@ -1,16 +1,8 @@
 const mongoose = require("mongoose");
 const SeraEvents = require("../models/models.seraEvents");
 const SeraSettings = require("../models/models.sera_settings");
-const modelsBuilder = require("../models/models.builder");
-const modelsNodes = require("../models/models.nodes");
-const modelsEdges = require("../models/models.edges");
-const crypto = require('crypto');
 
 let toastables = [];
-
-async function calculateHash(value) {
-    return crypto.createHash('md5').update(value).digest('hex');
-}
 
 const connectDatabase = async (mongoString) => {
     try {
@@ -20,9 +12,7 @@ const connectDatabase = async (mongoString) => {
         });
         console.log("Database Connected");
 
-        const inventoryChangeStream = modelsBuilder.watch();
-        const nodesChangeStream = modelsNodes.watch();
-        const edgesChangeStream = modelsEdges.watch();
+
         const settingsStream = SeraSettings.watch();
         const eventStream = SeraEvents.watch();
 
@@ -32,21 +22,10 @@ const connectDatabase = async (mongoString) => {
 
         settingsStream.on("change", (change) => {
             console.log("Settings Change:", change);
-            toastables = change.updateDescription.updatedFields.toastables;
-            console.log(toastables);
-        });
-
-        // Add error handling for streams
-        inventoryChangeStream.on('error', (error) => {
-            console.error("Inventory Stream Error:", error);
-        });
-
-        nodesChangeStream.on('error', (error) => {
-            console.error("Nodes Stream Error:", error);
-        });
-
-        edgesChangeStream.on('error', (error) => {
-            console.error("Edges Stream Error:", error);
+            if (change?.updateDescription?.updatedFields?.toastables) {
+                toastables = change?.updateDescription?.updatedFields?.toastables || [];
+                console.log(toastables);
+            }
         });
 
         settingsStream.on('error', (error) => {
