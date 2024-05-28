@@ -4,8 +4,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const http = require("http");
 const { Server } = require("socket.io");
-const { connectDatabase } = require("./handlers/mongoHandler");
-const { setupSocketHandlers } = require("./handlers/socketHandler");
+const { connectDatabase } = require("./src/handlers/mongoHandler");
+const { setupSocketHandlers } = require("./src/handlers/socketHandler");
 
 const mongoString = process.env.DB_HOST;
 const app = express();
