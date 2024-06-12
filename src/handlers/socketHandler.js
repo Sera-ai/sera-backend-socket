@@ -1,8 +1,16 @@
 const nodeEvents = require("../socket/socket.node");
 const edgeEvents = require("../socket/socket.edge");
+const SeraHosts = require("../models/models.hosts");
 
-const setupSocketHandlers = (io, eventStream, toastables) => {
+require("../models/models.oas")
+require("../models/models.dns")
+
+const setupSocketHandlers = (io, streams, toastables) => {
+
+  const { eventStream, hostStream } = streams
+
   io.on("connection", (socket) => {
+    console.log("Connected")
     let builder = null;
     socket.emit("connectSuccessful", socket.id);
 
@@ -19,13 +27,24 @@ const setupSocketHandlers = (io, eventStream, toastables) => {
 
     eventStream.on("change", (change) => {
       console.log(change);
-      if (change.operationType === "insert") {
+      if (change.operationType == "insert" || change.operationType == "delete" ) {
         const doc = change.fullDocument;
         if (toastables.includes(doc.type)) {
           socket.emit("eventNotification", doc);
         }
       }
     });
+
+    hostStream.on("change", (change) => {
+      console.log(change);
+      if (change.operationType === "insert") {
+        SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
+          socket.emit("onHostDataChanged", res);
+        })
+      }
+    });
+
+
 
     // New socket event handlers
     socket.on("nodeCreated", (data) => {
@@ -35,6 +54,7 @@ const setupSocketHandlers = (io, eventStream, toastables) => {
     socket.on("nodeDeleted", (data) => nodeEvents.delete_node(data, socket));
 
     socket.on("edgeCreated", (data) => {
+      console.log(data)
       edgeEvents.create_edge(data, socket);
     });
 

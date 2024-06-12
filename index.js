@@ -1,35 +1,37 @@
 require("dotenv").config();
-const cors = require("cors");
-const express = require("express");
-const bodyParser = require("body-parser");
-const http = require("http");
+const Fastify = require("fastify");
+const cors = require("@fastify/cors");
+const fastifyFormbody = require("@fastify/formbody");
 const { Server } = require("socket.io");
 const { connectDatabase } = require("./src/handlers/mongoHandler");
 const { setupSocketHandlers } = require("./src/handlers/socketHandler");
 
 const mongoString = process.env.DB_HOST;
-const app = express();
+const app = Fastify();
 
 (async () => {
-  const { eventStream, toastables } = await connectDatabase(mongoString);
+  const { streams, toastables } = await connectDatabase(mongoString);
 
-  const server = http.createServer(app);
+  // Register plugins
+  await app.register(cors, { origin: "*" });
+  await app.register(fastifyFormbody);
+  await app.register(require('@fastify/express')); // for socket.io compatibility
+
+
+  const server = app.server;
   const io = new Server(server, {
     cors: { origin: "*" },
     path: "/sera-socket-io",
   });
 
-  setupSocketHandlers(io, eventStream, toastables);
-
-  app.use(
-    cors(),
-    express.json(),
-    bodyParser.urlencoded({ extended: true }),
-    bodyParser.json()
-  );
+  setupSocketHandlers(io, streams, toastables);
 
   const port = process.env.BE_SOCKET_PORT;
-  server.listen(port, () => {
+  app.listen({ port, host: '0.0.0.0' }, (err) => {
+    if (err) {
+      app.log.error(err);
+      process.exit(1);
+    }
     console.log(`Socket server started at ${port}`);
   });
 })();
