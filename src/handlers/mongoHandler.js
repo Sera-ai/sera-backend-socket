@@ -23,7 +23,6 @@ const connectDatabase = async (mongoString) => {
         toastables = settingsDoc?.toastables || [];
 
         settingsStream.on("change", (change) => {
-            console.log("Settings Change:", change);
             if (change?.updateDescription?.updatedFields?.toastables) {
                 toastables = change?.updateDescription?.updatedFields?.toastables || [];
                 console.log(toastables);

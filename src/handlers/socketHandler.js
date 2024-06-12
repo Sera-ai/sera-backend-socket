@@ -26,8 +26,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
     });
 
     eventStream.on("change", (change) => {
-      console.log(change);
-      if (change.operationType == "insert" || change.operationType == "delete" ) {
+      if (change.operationType == "insert" || change.operationType == "delete") {
         const doc = change.fullDocument;
         if (toastables.includes(doc.type)) {
           socket.emit("eventNotification", doc);
@@ -36,9 +35,10 @@ const setupSocketHandlers = (io, streams, toastables) => {
     });
 
     hostStream.on("change", (change) => {
-      console.log(change);
       if (change.operationType === "insert") {
-        SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
+        if (toastables.includes("seraHostCreate")) SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
+          console.log(toastables)
+          console.log("event sent")
           socket.emit("onHostDataChanged", res);
         })
       }
