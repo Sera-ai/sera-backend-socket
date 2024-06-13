@@ -9,92 +9,129 @@ const setupSocketHandlers = (io, streams, toastables) => {
 
   const { eventStream, hostStream } = streams
 
-  io.on("connection", (socket) => {
-    console.log("Connected")
+  io.on('connection', (socket) => {
+    console.log("Connected");
+
     let builder = null;
-    socket.emit("connectSuccessful", socket.id);
+    socket.send(JSON.stringify({ type: "connectSuccessful", id: socket._socket._server._connectionKey }));
 
-    socket.on("builderConnect", (builderId) => {
-      builder = builderId;
-      socket.join(builderId);
+    socket.on('message', (message) => {
+      const parsedMessage = JSON.parse(message);
+      
+      switch (parsedMessage.type) {
+        case "builderConnect":
+          console.log(parsedMessage)
+          socket.builderId = parsedMessage.builder;
+          break;
+          
+        case "backendConnect":
+          console.log("builder connected");
+          socket.send(JSON.stringify({ type: "connectSuccessful", id: socket._socket._server._connectionKey }));
+          break;
+          
+        case "nodeCreated":
+          nodeEvents.create_node(parsedMessage, io);
+          break;
+
+        case "nodeDeleted":
+          nodeEvents.delete_node(parsedMessage, io);
+          break;
+
+        case "edgeCreated":
+          console.log(parsedMessage);
+          edgeEvents.create_edge(parsedMessage, io);
+          break;
+
+        case "edgeDeleted":
+          console.log(parsedMessage)
+          edgeEvents.delete_edge(parsedMessage, io);
+          break;
+
+        case "edgeUpdated":
+          edgeEvents.update_edge(parsedMessage, io);
+          break;
+
+        case "nodeUpdate":
+          nodeEvents.update_node(parsedMessage.node, builder, io);
+          break;
+
+        case "nodeDelete":
+          nodeEvents.delete_node(parsedMessage.node, builder, io);
+          break;
+
+        case "onConnect":
+          edgeEvents.connect_edge(parsedMessage.edge, builder, io);
+          break;
+
+        case "nodeCreate":
+          nodeEvents.create_node(parsedMessage.node, builder, io);
+          break;
+
+        case "updateField":
+          nodeEvents.update_node_data(parsedMessage.param, builder, io);
+          break;
+
+        case "mouseMove":
+          const data = {
+            id: socket._socket._server._connectionKey,
+            x: parsedMessage?.params?.x,
+            y: parsedMessage?.params?.y,
+            color: parsedMessage?.params?.color,
+          };
+          // Broadcast the mouse move event
+          io.clients.forEach(client => {
+            if (client !== socket && client.builderId === builder) {
+              client.send(JSON.stringify({ type: "mouseMoved", data }));
+            }
+          });
+          break;
+          
+        case "disconnect":
+          io.clients.forEach(client => {
+            if (client !== socket && client.builderId === builder) {
+              client.send(JSON.stringify({ type: "userDisconnected", id: socket._socket._server._connectionKey }));
+            }
+          });
+          break;
+
+        default:
+          console.log('Unknown message type:', parsedMessage.type);
+          break;
+      }
     });
 
-    socket.on("backendConnect", () => {
-      console.log("builder connected");
-      socket.join("management");
-      socket.emit("connectSuccessful", socket.id);
-    });
-
-    eventStream.on("change", (change) => {
-      if (change.operationType == "insert" || change.operationType == "delete") {
-        const doc = change.fullDocument;
-        if (toastables.includes(doc.type)) {
-          socket.emit("eventNotification", doc);
+    socket.on('close', () => {
+      io.clients.forEach(client => {
+        if (client.builderId === builder) {
+          client.send(JSON.stringify({ type: "userDisconnected", id: socket._socket._server._connectionKey }));
         }
+      });
+    });
+  });
+
+  eventStream.on("change", (change) => {
+    if (change.operationType == "insert" || change.operationType == "delete") {
+      const doc = change.fullDocument;
+      if (toastables.includes(doc.type)) {
+        io.clients.forEach(client => {
+          client.send(JSON.stringify({ type: "eventNotification", doc }));
+        });
       }
-    });
+    }
+  });
 
-    hostStream.on("change", (change) => {
-      if (change.operationType === "insert") {
-        if (toastables.includes("seraHostCreate")) SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
-          console.log(toastables)
-          console.log("event sent")
-          socket.emit("onHostDataChanged", res);
-        })
+  hostStream.on("change", (change) => {
+    if (change.operationType === "insert") {
+      if (toastables.includes("seraHostCreate")) {
+        SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
+          console.log(toastables);
+          console.log("event sent");
+          io.clients.forEach(client => {
+            client.send(JSON.stringify({ type: "onHostDataChanged", res }));
+          });
+        });
       }
-    });
-
-
-
-    // New socket event handlers
-    socket.on("nodeCreated", (data) => {
-      nodeEvents.create_node(data, socket);
-    });
-
-    socket.on("nodeDeleted", (data) => nodeEvents.delete_node(data, socket));
-
-    socket.on("edgeCreated", (data) => {
-      console.log(data)
-      edgeEvents.create_edge(data, socket);
-    });
-
-    socket.on("edgeDeleted", (data) => edgeEvents.delete_edge(data, socket));
-    socket.on("edgeUpdated", (data) => edgeEvents.update_edge(data, socket));
-
-    // Old socket event handlers (need to update)
-    socket.on("nodeUpdate", (node) =>
-      nodeEvents.update_node(node, builder, socket)
-    );
-
-    socket.on("nodeDelete", (node) =>
-      nodeEvents.delete_node(node, builder, socket)
-    );
-
-    socket.on("onConnect", (edge) =>
-      edgeEvents.connect_edge(edge, builder, socket)
-    );
-
-    socket.on("nodeCreate", (node) =>
-      nodeEvents.create_node(node, builder, socket)
-    );
-
-    socket.on("updateField", (param) =>
-      nodeEvents.update_node_data(param, builder, socket)
-    );
-
-    socket.on("mouseMove", (params) => {
-      const data = {
-        id: socket.id,
-        x: params.x,
-        y: params.y,
-        color: params.color,
-      };
-      socket.broadcast.to(builder).emit("mouseMoved", data);
-    });
-
-    socket.on("disconnect", () => {
-      socket.broadcast.to(builder).emit("userDisconnected", socket.id);
-    });
+    }
   });
 };
 

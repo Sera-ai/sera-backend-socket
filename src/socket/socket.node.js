@@ -2,15 +2,23 @@ const { default: mongoose } = require("mongoose");
 const modelsEventStruc = require("../models/models.eventStruc");
 const modelsNode = require("../models/models.nodes");
 
-function create_node(data, socket) {
-  socket.broadcast.to(data.builder).emit("nodeCreate", data.node);
+function broadcastToBuilderClients(io, builderId, message) {
+  io.clients.forEach(client => {
+    if (client.builderId === builderId && client.readyState === client.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
 }
 
-function delete_node(data, socket) {
-  socket.broadcast.to(data.builder).emit("nodeDelete", data.node);
+function create_node(data, io) {
+  broadcastToBuilderClients(io, data.builder, { type: "nodeCreate", node: data.node });
 }
 
-function update_node(node, builder, socket) {
+function delete_node(data, io) {
+  broadcastToBuilderClients(io, data.builder, { type: "nodeDelete", node: data.node });
+}
+
+function update_node(node, builder, io) {
   node.map((nod) => {
     console.log(nod);
     modelsNode
@@ -20,19 +28,19 @@ function update_node(node, builder, socket) {
       )
       .then((r) => console.log(r));
   });
-  socket.broadcast.to(builder).emit("nodeUpdate", node);
+  broadcastToBuilderClients(io, builder, { type: "nodeUpdate", node });
 }
 
-function update_node_data(params, builder, socket) {
+function update_node_data(params, builder, io) {
   console.log("params", params);
-  if (params?.node?.type != "sendEventNode") {
+  if (params?.node?.type !== "sendEventNode") {
     modelsNode
       .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
       .then((e) => {
         console.log("e", e);
       });
 
-    socket.broadcast.to(builder).emit("updateField", params);
+    broadcastToBuilderClients(io, builder, { type: "updateField", params });
   } else {
     console.log(params);
     modelsNode

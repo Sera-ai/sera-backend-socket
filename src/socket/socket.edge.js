@@ -4,19 +4,30 @@ const modelsStruc = require("../models/models.eventStruc");
 const modelsEdges = require("../models/models.edges");
 const ObjectId = require("mongoose").Types.ObjectId;
 
-async function create_edge(data, socket) {
-  socket.broadcast.to(data.builder).emit("edgeCreate", data.edge);
-}
-function delete_edge(data, socket) {
-  socket.broadcast.to(data.builder).emit("edgeDelete", data.edge);
-}
-function update_edge(data, socket) {
-  socket.broadcast.to(data.builder).emit("edgeUpdate", data.edge);
+function broadcastToBuilderClients(io, builderId, message) {
+  io.clients.forEach(client => {
+    console.log(client)
+    if (client.builderId === builderId && client.readyState === client.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
 }
 
-async function connect_edge(params, builder, socket) {
+async function create_edge(data, io) {
+  broadcastToBuilderClients(io, data.builder, { type: "edgeCreate", edge: data.edge });
+}
+
+function delete_edge(data, io) {
+  console.log(data)
+  broadcastToBuilderClients(io, data.builder, { type: "edgeDelete", edge: data.edge });
+}
+
+function update_edge(data, io) {
+  broadcastToBuilderClients(io, data.builder, { type: "edgeUpdate", edge: data.edge });
+}
+
+async function connect_edge(params, builder, io) {
   let edges = params.edges;
-
   let edge = params.edge;
 
   console.log(params);
@@ -28,10 +39,10 @@ async function connect_edge(params, builder, socket) {
   modelsBuilder.findByIdAndUpdate(builder, {
     $push: { edges: dataToSave._id },
   });
-  socket.broadcast.to(builder).emit("onConnect", edge);
+  broadcastToBuilderClients(io, builder, { type: "onConnect", edge });
 
   const isScript = params.nodes.filter(
-    (node) => params.edge.target == node.id && node.type == "scriptNode"
+    (node) => params.edge.target === node.id && node.type === "scriptNode"
   );
   console.log("script", isScript);
   if (isScript.length > 0) {
@@ -44,7 +55,8 @@ async function connect_edge(params, builder, socket) {
         .then((e) => {
           console.log("e", e);
 
-          socket.broadcast.to(builder).emit("updateField", {
+          broadcastToBuilderClients(io, builder, {
+            type: "updateField",
             id: isScript[0].id,
             data: e.data.targets,
             edge: true,
