@@ -68,7 +68,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
           break;
 
         case "updateField":
-          nodeEvents.update_node_data(parsedMessage.param, builder, io);
+          nodeEvents.update_node_data(parsedMessage, builder, io);
           break;
 
         case "mouseMove":
