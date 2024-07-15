@@ -112,6 +112,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
   eventStream.on("change", (change) => {
     if (change.operationType == "insert" || change.operationType == "delete") {
       const doc = change.fullDocument;
+      console.log("boopiun")
       if (toastables.includes(doc.type)) {
         io.clients.forEach(client => {
           client.send(JSON.stringify({ type: "eventNotification", doc }));

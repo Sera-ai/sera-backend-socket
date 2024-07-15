@@ -15,6 +15,7 @@ function create_node(data, io) {
 }
 
 function delete_node(data, io) {
+  console.log(data)
   broadcastToBuilderClients(io, data.builder, { type: "nodeDelete", node: data.node });
 }
 
