@@ -1,6 +1,7 @@
 const nodeEvents = require("../socket/socket.node");
 const edgeEvents = require("../socket/socket.edge");
 const SeraHosts = require("../models/models.hosts");
+const seraEvents = require("../models/models.seraEvents");
 const eventBuilder = require("../models/models.eventBuilder");
 const seraBuilder = require("../models/models.builder");
 const seraNodes = require("../models/models.nodes");
@@ -14,7 +15,7 @@ require("../models/models.dns")
 
 const setupSocketHandlers = (io, streams, toastables) => {
 
-  const { eventStream, hostStream } = streams
+  const { eventStream, hostStream, nginxStream } = streams
 
   io.on('connection', (socket) => {
     console.log("Connected");
@@ -167,6 +168,15 @@ const setupSocketHandlers = (io, streams, toastables) => {
         });
       });
       if (toastables.includes("seraHostCreate")) { }
+    }
+  });
+
+  nginxStream.on("change", (change) => {
+    if (change.operationType === "insert") {
+      const doc = change.fullDocument;
+      if (doc.response_time > 3000) {
+        seraEvents.create({ event: "sera", type: "seraRoundTripTime", srcIp: doc.session_analytics.ip_address, data: { endpoint: doc.hostname + doc.path, requestData: doc.request, totalTime: doc.response_time, builderId: "nil", timestamp: new Date().getTime() } })
+      }
     }
   });
 };

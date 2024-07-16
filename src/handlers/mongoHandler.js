@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const SeraEvents = require("../models/models.seraEvents");
 const SeraSettings = require("../models/models.sera_settings");
 const SeraHosts = require("../models/models.hosts");
+const nginxLogs = require("../models/models.tx_logs");
 
 let toastables = [];
 
@@ -17,6 +18,7 @@ const connectDatabase = async (mongoString) => {
         const settingsStream = SeraSettings.watch();
         const eventStream = SeraEvents.watch();
         const hostStream = SeraHosts.watch();
+        const nginxStream = nginxLogs.watch();
 
         // Initialize toastables
         const settingsDoc = await SeraSettings.findOne({ user: "admin" });
@@ -41,7 +43,11 @@ const connectDatabase = async (mongoString) => {
             console.error("Host Stream Error:", error);
         });
 
-        return { streams: { hostStream, eventStream }, toastables };
+        nginxStream.on('error', (error) => {
+            console.error("NGINX Stream Error:", error);
+        });
+
+        return { streams: { hostStream, eventStream, nginxStream }, toastables };
     } catch (error) {
         console.error("Database connection error:", error);
         process.exit(1);
