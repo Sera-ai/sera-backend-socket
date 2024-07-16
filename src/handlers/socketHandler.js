@@ -146,7 +146,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
                 "Content-Type": "application/json",
                 "x-sera-service": "be_builder",
               },
-              body: JSON.stringify({}),
+              body: JSON.stringify(doc.data),
             })
           });
         } else {
