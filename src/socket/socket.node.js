@@ -32,8 +32,7 @@ function update_node(node, builder, io) {
   broadcastToBuilderClients(io, builder, { type: "nodeUpdate", node });
 }
 
-function update_node_data(params, builder, io) {
-  console.log("params", params);
+async function update_node_data(params, builder, io) {
   if (params?.node?.type !== "sendEventNode") {
     modelsNode
       .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
@@ -43,17 +42,15 @@ function update_node_data(params, builder, io) {
 
     broadcastToBuilderClients(io, builder, { type: "updateField", params });
   } else {
-    console.log(params);
-    modelsNode
-      .findOneAndUpdate(
-        { id: params.node.id },
-        { "data.inputData": params.value }
-      )
-      .then((e) => {
-        console.log("e", e);
-      });
+    console.log("params", params);
+    const updatedNode = await modelsNode.findOneAndUpdate(
+      { id: params.node.id },
+      { "data.inputData": params.value },
+      { new: true } // This option returns the updated document
+    );
+    console.log(updatedNode)
     modelsEventStruc
-      .findByIdAndUpdate(params.node.data.struc_id, { type: params.value })
+      .findByIdAndUpdate(updatedNode.data.struc_id, { type: params.value })
       .then((e) => {
         console.log("e", e);
       });

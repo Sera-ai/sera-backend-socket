@@ -128,6 +128,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
       seraNodes.findOne({ "data.inputData": doc.type, type:"eventNode" }).then((result) => {
         if (!result) {
           console.error("something went wrong here 1");
+          console.error(doc.type);
           return;
         }
 
