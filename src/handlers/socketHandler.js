@@ -125,7 +125,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
           client.send(JSON.stringify({ type: "eventNotification", doc }));
         });
       }
-      seraNodes.findOne({ "data.inputData": doc.type, type:"eventNode" }).then((result) => {
+      seraNodes.findOne({ "data.inputData": doc.type, type: "eventNode" }).then((result) => {
         if (!result) {
           console.error("something went wrong here 1");
           console.error(doc.type);
@@ -159,15 +159,14 @@ const setupSocketHandlers = (io, streams, toastables) => {
 
   hostStream.on("change", (change) => {
     if (change.operationType === "insert") {
-      if (toastables.includes("seraHostCreate")) {
-        SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
-          console.log(toastables);
-          console.log("event sent");
-          io.clients.forEach(client => {
-            client.send(JSON.stringify({ type: "onHostDataChanged", res }));
-          });
+      SeraHosts.find().populate(["oas_spec"]).limit(100).then((res) => {
+        console.log(toastables);
+        console.log("event sent");
+        io.clients.forEach(client => {
+          client.send(JSON.stringify({ type: "onHostDataChanged", res }));
         });
-      }
+      });
+      if (toastables.includes("seraHostCreate")) { }
     }
   });
 };
