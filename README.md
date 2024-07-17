@@ -1,5 +1,7 @@
 # Sera Backend Socket
 
+![Node.js](https://img.shields.io/badge/Node.js-Fastify-green?logo=node.js) ![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker) ![Socket.io](https://img.shields.io/badge/Socket.io-Enabled-black?logo=socket.io)
+
 This repository contains a Node.js server built with Fastify for HTTP/HTTPS endpoints and WebSocket support.
 
 ## Overview
