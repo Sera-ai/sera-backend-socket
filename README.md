@@ -42,8 +42,8 @@ Before you begin, ensure you have the following installed:
 To get started, clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/Sera-ai/sera-backend-socket.git
+cd sera-backend-socket
 npm install
 ```
 ### Using Docker
