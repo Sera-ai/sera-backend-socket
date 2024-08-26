@@ -33,7 +33,7 @@ function update_node(node, builder, io) {
 }
 
 async function update_node_data(params, builder, io) {
-  console.log(params?.node?.type)
+  console.log("type",params)
   if (params?.node?.type !== "sendEventNode") {
     modelsNode
       .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
