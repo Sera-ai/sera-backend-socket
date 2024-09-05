@@ -128,7 +128,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
       }
       seraNodes.findOne({ "data.inputData": doc.type, type: "eventNode" }).then((result) => {
         if (!result) {
-          console.error("something went wrong here 1");
+          console.error("No inputData Result");
           console.error(doc.type);
           return;
         }
@@ -136,7 +136,7 @@ const setupSocketHandlers = (io, streams, toastables) => {
         if (result) {
           eventBuilder.findOne({ nodes: { $in: [result._id] } }).then((eventResult) => {
             if (!eventResult) {
-              console.error("something went wrong here 2");
+              console.error("No eventBuilder Result");
               console.log(result._id)
               return;
             }
