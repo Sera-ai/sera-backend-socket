@@ -1,10 +1,14 @@
-require("dotenv").config();
-const Fastify = require("fastify");
-const cors = require("@fastify/cors");
-const fastifyFormbody = require("@fastify/formbody");
-const { WebSocketServer } = require('ws');
-const { connectDatabase } = require("./src/handlers/mongoHandler");
-const { setupSocketHandlers } = require("./src/handlers/socketHandler");
+import 'dotenv/config';
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import fastifyFormbody from '@fastify/formbody';
+import fastifyExpress from '@fastify/express';
+
+import { WebSocketServer } from 'ws';
+
+import { connectDatabase } from './src/handlers/mongoHandler.js';
+import { setupSocketHandlers } from './src/handlers/socketHandler.js';
+
 
 const mongoString = process.env.DB_HOST;
 const app = Fastify();
@@ -13,14 +17,14 @@ const app = Fastify();
   const { streams, toastables } = await connectDatabase(mongoString);
 
   // Register plugins
-  await app.register(cors, { origin: "*" });
+  await app.register(cors, { origin: '*' });
   await app.register(fastifyFormbody);
-  await app.register(require('@fastify/express')); // for socket.io compatibility
+  await app.register(fastifyExpress); // for socket.io compatibility
 
   const port = process.env.BE_SOCKET_PORT;
 
   // Start the Fastify server
-  await app.listen({ port, host: '0.0.0.0' }, (err) => {
+  app.listen({ port, host: '0.0.0.0' }, (err) => {
     if (err) {
       app.log.error(err);
       process.exit(1);
@@ -32,7 +36,7 @@ const app = Fastify();
   const server = app.server;
   const io = new WebSocketServer({
     server,
-    path: "/sera-socket-io",
+    path: '/sera-socket-io',
   });
 
   setupSocketHandlers(io, streams, toastables);

@@ -1,8 +1,9 @@
 {
-  "name": "sera-socket",
+  "name": "sera-backend-socket",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",

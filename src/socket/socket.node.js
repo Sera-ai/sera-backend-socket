@@ -1,6 +1,5 @@
-const { default: mongoose } = require("mongoose");
-const modelsEventStruc = require("../models/models.eventStruc");
-const modelsNode = require("../models/models.nodes");
+const { default: event_struc_model } = await import("../models/models.event_struc.cjs");
+const { default: builder_node_model } = await import("../models/models.builder_node.cjs");
 
 function broadcastToBuilderClients(io, builderId, message) {
   io.clients.forEach(client => {
@@ -10,64 +9,55 @@ function broadcastToBuilderClients(io, builderId, message) {
   });
 }
 
-function create_node(data, io) {
-  broadcastToBuilderClients(io, data.builder, { type: "nodeCreate", node: data.node });
+export function create_node(data, io) {
+  broadcastToBuilderClients(io, data.builder, { type: 'nodeCreate', node: data.node });
 }
 
-function delete_node(data, io) {
-  console.log(data)
-  broadcastToBuilderClients(io, data.builder, { type: "nodeDelete", node: data.node });
+export function delete_node(data, io) {
+  console.log(data);
+  broadcastToBuilderClients(io, data.builder, { type: 'nodeDelete', node: data.node });
 }
 
-function update_node(node, builder, io) {
+export function update_node(node, builder, io) {
   node.map((nod) => {
     console.log(nod);
-    modelsNode
+    builder_node_model
       .findOneAndUpdate(
         { id: nod.id },
         { position: nod.position, positionAboslute: nod.positionAboslute }
       )
       .then((r) => console.log(r));
   });
-  broadcastToBuilderClients(io, builder, { type: "nodeUpdate", node });
+  broadcastToBuilderClients(io, builder, { type: 'nodeUpdate', node });
 }
 
-async function update_node_data(params, builder, io) {
-  console.log("type",params)
-  if (params?.node?.type !== "sendEventNode") {
-    modelsNode
+export async function update_node_data(params, builder, io) {
+  console.log('type', params);
+  if (params?.node?.type !== 'sendEventNode') {
+    builder_node_model
       .findOneAndUpdate({ id: params.id }, { [params.field]: params.data })
       .then((e) => {
-        console.log("e", e);
+        console.log('e', e);
       });
 
-    broadcastToBuilderClients(io, builder, { type: "updateField", params });
+    broadcastToBuilderClients(io, builder, { type: 'updateField', params });
   } else {
-    const updatedNode = await modelsNode.findOneAndUpdate(
+    const updatedNode = await builder_node_model.findOneAndUpdate(
       { id: params.node.id },
-      { "data.inputData": params.value },
+      { 'data.inputData': params.value },
       { new: true } // This option returns the updated document
     );
-    modelsEventStruc
+    event_struc_model
       .findByIdAndUpdate(updatedNode.data.struc_id, { type: params.value })
       .then((e) => {
-        console.log("e", e);
+        console.log('e', e);
       });
-    
   }
 }
 
-module.exports = {
-  create_node,
-  delete_node,
-  update_node,
-  update_node_data,
-};
-
-function generateRandomString() {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
+export function generateRandomString() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
   for (let i = 0; i < 12; i++) {
     const randomIndex = Math.floor(Math.random() * chars.length);
     result += chars[randomIndex];
